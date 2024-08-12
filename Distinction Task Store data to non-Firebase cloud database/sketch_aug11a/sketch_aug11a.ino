@@ -53,8 +53,8 @@ float x, y, z;
 
 /******* MQTT Broker Connection Details *******/
 const char* mqtt_server = "943103f9e51648f9b2e42b0741f78511.s1.eu.hivemq.cloud";
-const char* mqtt_username = "tomadonna";
-const char* mqtt_password = "L@ongonly1";
+const char* mqtt_username = "";
+const char* mqtt_password = "";
 const int mqtt_port =8883;
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
