@@ -1,0 +1,4 @@
+Outline Level,ID,Name,Start,Finish,Duration,% Complete,Predecessors,Resource Names,Color,Notes
+1,1,"Implementation",2024-09-17,2024-09-19,2 day,65,"","",,"<p><br></p>"
+2,2,"Build the classification model",2024-09-17,2024-09-18,1 day,80,"","Team Member 1",121,"<p><br></p>"
+2,3,"Submit the conference paper",2024-09-18,2024-09-19,1 day,50,"2FS","Team Member 2",211,"<p><br></p>"
