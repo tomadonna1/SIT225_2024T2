@@ -10,7 +10,7 @@ def timestamp():
 
 # Serial port and saving csv, json file in desire destination
 ser = serial.Serial('COM4', 9600)
-csv_file = os.path.join(r'C:\Users\tomde\OneDrive\Documents\Deakin\Deakin-Data-Science\T1Y2\SIT225 - Data Capture Technologies\Week 6 - Visualisation - Plotly data dashboard\6.2HD\data_gathering', 'data.csv')
+csv_file = os.path.join(r'C:\Users\tomde\OneDrive\Documents\Deakin uni\Deakin-Data-Science\T1Y2\SIT225 - Data Capture Technologies\Week 6 - Visualisation - Plotly data dashboard\6.2HD\data_gathering', 'data.csv')
 
 try:
     while True:
