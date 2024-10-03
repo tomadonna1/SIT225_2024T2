@@ -9,9 +9,9 @@ import threading
 
 # Firebase set up
 if not firebase_admin._apps:
-    databaseURL = 'https://touchless-screen-default-rtdb.firebaseio.com/'
+    databaseURL = ''
     cred_obj = firebase_admin.credentials.Certificate(
-        'touchless-screen-firebase-adminsdk-yzuog-644800a537.json'
+        ''
     )
     default_app = firebase_admin.initialize_app(cred_obj, {
         'databaseURL':databaseURL
