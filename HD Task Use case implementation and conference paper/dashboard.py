@@ -5,12 +5,13 @@ from hand_prediction import HandGestureRecognizer
 import cv2
 import firebase_admin
 from firebase_admin import db
+import threading
 
 # Firebase set up
 if not firebase_admin._apps:
-    databaseURL = ''
+    databaseURL = 'https://touchless-screen-default-rtdb.firebaseio.com/'
     cred_obj = firebase_admin.credentials.Certificate(
-        ''
+        'touchless-screen-firebase-adminsdk-yzuog-644800a537.json'
     )
     default_app = firebase_admin.initialize_app(cred_obj, {
         'databaseURL':databaseURL
@@ -29,6 +30,29 @@ menu_items = [
     {'name': 'Pasta', 'image': 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg'}
 ]
 
+# Threaded VideoCapture class
+class VideoCaptureThread:
+    def __init__(self, src):
+        self.cap = cv2.VideoCapture(src)
+        self.ret = False
+        self.frame = None
+        self.stopped = False
+        self.thread = threading.Thread(target=self.update, args=())
+        self.thread.daemon = True
+        self.thread.start()
+
+    def update(self):
+        while not self.stopped:
+            if self.cap.isOpened():
+                self.ret, self.frame = self.cap.read()
+
+    def read(self):
+        return self.ret, self.frame
+
+    def release(self):
+        self.stopped = True
+        self.cap.release()
+
 # State to keep track of current menu selection and confirmation
 if 'selected_item' not in st.session_state:
     st.session_state.selected_item = None
@@ -42,9 +66,11 @@ if 'cycle_state' not in st.session_state:
     st.session_state.cycle_state = 'navigation'
 if 'start_stream' not in st.session_state:
     st.session_state.start_stream = False 
+if 'video_thread' not in st.session_state:
+    st.session_state.video_thread = None 
 
 # Control processing interval
-PROCESS_EVERY_N_FRAMES = 3
+PROCESS_EVERY_N_FRAMES = 2
 frame_counter = 0
 
 # Placeholder for video and gesture prediction (side by side)
@@ -69,14 +95,15 @@ def predict_gesture():
     end_time = time.time() + 10
     predictions = []
 
-    if 'cap' in st.session_state and st.session_state.cap.isOpened():
+    if st.session_state.video_thread and st.session_state.video_thread.cap.isOpened():
         while time.time() < end_time:
-            ret, frame = st.session_state.cap.read()
+            ret, frame = st.session_state.video_thread.read()
             if not ret:
                 break
             
             if frame_counter % PROCESS_EVERY_N_FRAMES == 0:
                 # Predict user gestures via camera
+                # frame = cv2.resize(frame, (360, 640)) # Lower the resolution
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 predicted_gesture, cropped_image = recognizer.predict_hand_gestures(rgb_frame)
                 
@@ -89,8 +116,9 @@ def predict_gesture():
                     
                 # Display the video
                 rotated_frame = cv2.rotate(rgb_frame, cv2.ROTATE_90_CLOCKWISE)
-                resized_frame = cv2.resize(rotated_frame, (360, 640))
+                resized_frame = cv2.resize(rotated_frame, (180, 320))
                 video_placeholder.image(resized_frame, channels="RGB")
+                # video_placeholder.image(rgb_frame, channels="RGB")
                 
             # Increment frame counter
             frame_counter += 1
@@ -117,15 +145,16 @@ with col2:
             st.session_state.start_stream = True
             
             # Set up the video capture
-            st.session_state.cap = cv2.VideoCapture('http://10.141.10.103:8080/video')
+            st.session_state.video_thread = VideoCaptureThread('http://10.141.10.103:8080/video')
+            # st.session_state.cap = cv2.VideoCapture(0)
             st.rerun() 
     
     # Button to stop the video stream
     if st.session_state.start_stream:
         if st.button("Stop Video Stream"):
             st.write("Video stream stopped.")
-            if 'cap' in st.session_state and st.session_state.cap.isOpened():
-                st.session_state.cap.release()
+            if st.session_state.video_thread:
+                st.session_state.video_thread.release()
             st.session_state.start_stream = False
             st.stop()
 
@@ -198,9 +227,9 @@ with col2:
         time.sleep(5)
         st.session_state.cycle_state = 'navigation'
         st.session_state.selected_item = None
-        st.rerun()  # Reset to the start after confirmation
+        st.rerun()  
 
 
 # Release the video capture at the end if stream is stopped
-if 'cap' in st.session_state and st.session_state.cycle_state == 'stop' and st.session_state.cap.isOpened():
-    st.session_state.cap.release()
+if 'video_thread' in st.session_state and st.session_state.video_thread and st.session_state.cycle_state == 'stop':
+    st.session_state.video_thread.release()

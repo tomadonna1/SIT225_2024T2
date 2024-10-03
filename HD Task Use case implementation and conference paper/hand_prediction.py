@@ -7,6 +7,9 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras import mixed_precision
 import tensorflow as tf
 
+# Enable mixed precision for potential speedup
+mixed_precision.set_global_policy('float32')
+
 class HandGestureRecognizer:
     def __init__(self, model_path='model11.h5', class_labels=None, img_size=300, offset=100):
         # Set default class labels if none are provided
